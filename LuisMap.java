@@ -1,27 +1,47 @@
+package random;
+
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
 /**
- * LuisMap is a type of HashMap, written by Luis Hoderlein
+ * @author Luis Hoderlein
+ *
+ * LuisMap is based on the idea of the HashMap.
+ * It is written and maintaied by Luis Hoderlein.
  *
  * I give no warranty to it working in any way as intended.
+ * If it breaks, you may in no way fault me.
  *
- * @author Luis Hoderlein
+ * By using this software, you agree to the above terms.
+ *
+ * "I am innocent of this man's blood. 
+ * The responsibility is yours!"
+ * 
+ * - Pontius Pilate
  *
  * @param <K> the key class, all keys must extend K
  * @param <V> the value class, all values must extend V
  */
 
 public class LuisMap<K, V> {
+    
     /**
-     * Default values
+     * Default values for the settings of the LuisMap
      */
     private static final int DEFAULT_MAX_CAPACITY = 6;
     private static final float DEFAULT_FILLED_CAPACITY_RATIO = 0.5f;
     private static final float DEFAULT_GROWTH_RATIO = 1.2f;
 
-    private class KVPair<K, V> {
-        private K key;
-        private V value;
+    /**
+     * A class that represents a key-value pair 
+     * @param <k> the key of the key-value pair
+     * @param <v> the value of the key-value pair 
+     */
+    private class KVPair<k, v> {
+        private k key;
+        private v value;
 
-        private KVPair(K key, V value) {
+        private KVPair(k key, v value) {
             this.key = key;
             this.value = value;
         }
@@ -44,13 +64,20 @@ public class LuisMap<K, V> {
     private float filledCapacityRatio;
     private float growthRatio;
 
+    /**
+     * Main Constructor
+     *
+     * @param capacity how much space the new LuisMap should start with
+     * @param filledCapacityRatio the ratio of filled : capacity that will trigger grow()
+     * @param growthRatio how much grow() should grow your LuisMap
+     */
     public LuisMap(int capacity, float filledCapacityRatio, float growthRatio) {
         if (capacity <= 0)
             throw new IllegalArgumentException("Capacity too low");
         if (filledCapacityRatio < 0.001f)
             throw new IllegalArgumentException("Filled : Capacity ratio too low");
         if (growthRatio < 1.001f)
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException("Growth Ratio too low");
 
         this.capacity = capacity;
         this.filled = 0;
@@ -61,10 +88,17 @@ public class LuisMap<K, V> {
         this.kvPairs = new KVPair[capacity];
     }
 
-    public LuisMap() {
-        this(DEFAULT_MAX_CAPACITY, DEFAULT_FILLED_CAPACITY_RATIO, DEFAULT_GROWTH_RATIO);
-    }
+    /**
+     * Default Constructor
+     */
+    public LuisMap() {this(DEFAULT_MAX_CAPACITY, DEFAULT_FILLED_CAPACITY_RATIO, DEFAULT_GROWTH_RATIO);}
 
+    /**
+     * Add a new key-value pair to the Luis Map
+     *
+     * @param key the key of the key-value pair
+     * @param value the value of the key-value pair
+     */
     public void add(K key, V value) {
         if (key == null)
             throw new IllegalArgumentException("Key may not be null!");
@@ -83,6 +117,9 @@ public class LuisMap<K, V> {
         }
     }
 
+    /**
+     * Grow the LuisMap as specified by growthRatio
+     */
     private void grow() {
         KVPair<K, V>[] tmpKVPairs = new KVPair[(int)(capacity * growthRatio)];
 
@@ -102,6 +139,13 @@ public class LuisMap<K, V> {
         this.capacity = tmpKVPairs.length;
     }
 
+    /**
+     * Get the value associated with a key
+     * i.e. look up a key-value pair
+     *
+     * @param key A Key to look up
+     * @return the value that that key refers to
+     */
     public V get(K key) {
         if (key == null)
             throw new IllegalArgumentException("Key may not be null!");
@@ -121,6 +165,13 @@ public class LuisMap<K, V> {
         return kvPairs[position].value;
     }
 
+    /**
+     * Get the value associated with a key
+     * Then remove it from the Luis Map
+     *
+     * @param key A Key to look up
+     * @return The value that the key refers to
+     */
     public V remove(K key) {
         if (key == null)
             throw new IllegalArgumentException("Key may not be null!");
@@ -143,52 +194,29 @@ public class LuisMap<K, V> {
         return res;
     }
 
+    /**
+     * A getter for the length of the Luis Map
+     * @return the number of key-value pairs stored
+     */
     public int getLength() {
         return this.filled;
     }
 
+    /**
+     * A getter for the capacity of the Luis Map
+     * @return The maximum capacity of key-value pairs able to be stored
+     */
     public int getCapacity() {
         return this.capacity;
     }
 
     @Override
-    public String toString() {
-        return Arrays.toString(kvPairs);
-    }
+    public String toString() {return Arrays.toString(kvPairs);}
 
     private int mod(int a, int b) {
         if (a >= 0)
             return a % b;
         else
             return b + (a % b);
-    }
-
-    public static void main(String[] args) {
-        LuisMap<String, Integer> test = new LuisMap<>();
-        test.add(new String("This is test!!!"), new Integer(100));
-        test.add(new String("This is also a test"), new Integer(210));
-        System.out.println(test);
-        System.out.println(test.get(new String("This is test!!!")));
-        System.out.println(test.get(new String("This is also a test")));
-        System.out.println(test.remove(new String("This is test!!!")));
-        System.out.println(test);
-
-        try{new Thread().sleep(1000);}catch(Exception e){}
-
-        //System.out.println(test.get(new String("This is test")));
-        //System.out.println(test.remove(new String("This is test")));
-        test.add(new String("WELP"), new Integer(14));
-        System.out.println(test);
-        test.add(new String("OP"), new Integer(15));
-        System.out.println(test);
-        System.out.println(test.getCapacity());
-        System.out.println(test.getLength());
-        System.out.println(new String("OP").hashCode() % 6);
-
-        try{new Thread().sleep(1000);}catch(Exception e){}
-        test.remove(new String("OP"));
-        System.out.println(test);
-        test.add(new String("OP"), new Integer(15));
-        System.out.println(test);
     }
 }
