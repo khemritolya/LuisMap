@@ -1,5 +1,3 @@
-package random;
-
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
@@ -14,9 +12,9 @@ import java.util.NoSuchElementException;
  *
  * By using this software, you agree to the above terms.
  *
- * "I am innocent of this man's blood. 
+ * "I am innocent of this man's blood.
  * The responsibility is yours!"
- * 
+ *
  * - Pontius Pilate
  *
  * @param <K> the key class, all keys must extend K
@@ -24,18 +22,18 @@ import java.util.NoSuchElementException;
  */
 
 public class LuisMap<K, V> {
-    
+
     /**
      * Default values for the settings of the LuisMap
      */
     private static final int DEFAULT_MAX_CAPACITY = 6;
     private static final float DEFAULT_FILLED_CAPACITY_RATIO = 0.5f;
-    private static final float DEFAULT_GROWTH_RATIO = 1.2f;
+    private static final float DEFAULT_GROWTH_RATIO = 1.5f;
 
     /**
-     * A class that represents a key-value pair 
+     * A class that represents a key-value pair
      * @param <k> the key of the key-value pair
-     * @param <v> the value of the key-value pair 
+     * @param <v> the value of the key-value pair
      */
     private class KVPair<k, v> {
         private k key;
@@ -48,17 +46,26 @@ public class LuisMap<K, V> {
 
         @Override
         public String toString() {
-            if (key != null)
-                return key + ": " + value;
+            if (this.key != null)
+                return this.key + ": " + this.value;
             else
                 return "Empty Pair";
         }
     }
 
+    /**
+     * The Empty Pair - when deleting an entry, set it to this
+     */
     private final KVPair<K, V> emptyPair = new KVPair<>(null, null);
 
+    /**
+     * The key-value pair array, where everything is stored
+     */
     private KVPair<K,V>[] kvPairs = new KVPair[1];
 
+    /**
+     * Various attributes of the LuisMap
+     */
     private int capacity;
     private int filled;
     private float filledCapacityRatio;
@@ -105,38 +112,22 @@ public class LuisMap<K, V> {
 
         int position = mod(key.hashCode(), this.capacity);
 
-        while (kvPairs[position] != null && kvPairs[position] != emptyPair) {
+        if (this.kvPairs[position] != null && key.equals(this.kvPairs[position].key))
+            throw new IllegalArgumentException("Key already exists!");
+
+        while (this.kvPairs[position] != null && this.kvPairs[position] != emptyPair) {
             position = mod(position + 1, this.capacity);
+
+            if (this.kvPairs[position] != null && key.equals(this.kvPairs[position].key))
+                throw new IllegalArgumentException("Key already exists!");
         }
 
-        kvPairs[position] = new KVPair<>(key, value);
-        filled++;
+        this.kvPairs[position] = new KVPair<>(key, value);
+        this.filled++;
 
-        if (1.0f * filled / capacity >= filledCapacityRatio) {
+        while (1.0f * this.filled / this.capacity >= this.filledCapacityRatio) {
             grow();
         }
-    }
-
-    /**
-     * Grow the LuisMap as specified by growthRatio
-     */
-    private void grow() {
-        KVPair<K, V>[] tmpKVPairs = new KVPair[(int)(capacity * growthRatio)];
-
-        for (int i = 0; i < capacity; i++) {
-            if (kvPairs[i] != null && kvPairs[i] != emptyPair) {
-                int position = mod(kvPairs[i].key.hashCode(), tmpKVPairs.length);
-
-                while (tmpKVPairs[position] != null) {
-                    position = mod(position + 1, tmpKVPairs.length);
-                }
-
-                tmpKVPairs[position] = new KVPair<>(kvPairs[i].key, kvPairs[i].value);
-            }
-        }
-
-        this.kvPairs = tmpKVPairs;
-        this.capacity = tmpKVPairs.length;
     }
 
     /**
@@ -151,7 +142,7 @@ public class LuisMap<K, V> {
             throw new IllegalArgumentException("Key may not be null!");
 
         int position = mod(key.hashCode(), this.capacity);
-        while (kvPairs[position] != null && !key.equals(kvPairs[position].key)) {
+        while (this.kvPairs[position] != null && !key.equals(this.kvPairs[position].key)) {
             System.out.println(position);
             position = mod(position + 1, this.capacity);
 
@@ -159,10 +150,10 @@ public class LuisMap<K, V> {
                 throw new NoSuchElementException("There exists no such key!");
         }
 
-        if (kvPairs[position] == null)
+        if (this.kvPairs[position] == null)
             throw new NoSuchElementException("There exists no such key!");
 
-        return kvPairs[position].value;
+        return this.kvPairs[position].value;
     }
 
     /**
@@ -177,21 +168,57 @@ public class LuisMap<K, V> {
             throw new IllegalArgumentException("Key may not be null!");
 
         int position = mod(key.hashCode(), this.capacity);
-        while (kvPairs[position] != null && !key.equals(kvPairs[position].key)) {
+        while (this.kvPairs[position] != null && !key.equals(this.kvPairs[position].key)) {
             position = mod(position + 1, this.capacity);
 
             if (position == mod(key.hashCode(), this.capacity))
                 throw new IllegalArgumentException("There exists no such key!");
         }
 
-        if (kvPairs[position] == null)
+        if (this.kvPairs[position] == null)
             throw new NoSuchElementException("There exists no such key! @ pos: " + position);
 
-        V res = kvPairs[position].value;
-        kvPairs[position] = emptyPair;
+        V res = this.kvPairs[position].value;
+        this.kvPairs[position] = this.emptyPair;
 
-        filled--;
+        this.filled--;
         return res;
+    }
+
+    /**
+     * Grow the LuisMap as specified by growthRatio
+     */
+    private void grow() {
+        KVPair<K, V>[] tmpKVPairs = new KVPair[(int)(this.capacity * this.growthRatio)];
+
+        for (int i = 0; i < this.capacity; i++) {
+            if (this.kvPairs[i] != null && this.kvPairs[i] != this.emptyPair) {
+                int position = mod(this.kvPairs[i].key.hashCode(), tmpKVPairs.length);
+
+                while (tmpKVPairs[position] != null) {
+                    position = mod(position + 1, tmpKVPairs.length);
+                }
+
+                tmpKVPairs[position] = new KVPair<>(this.kvPairs[i].key, this.kvPairs[i].value);
+            }
+        }
+
+        this.kvPairs = tmpKVPairs;
+        this.capacity = tmpKVPairs.length;
+    }
+
+    /**
+     * Takes the positive mod of a and b
+     *
+     * @param a The first number
+     * @param b The second number
+     * @return The positive mod of a and b
+     */
+    private int mod(int a, int b) {
+        if (a >= 0)
+            return a % b;
+        else
+            return b + (a % b);
     }
 
     /**
@@ -210,13 +237,18 @@ public class LuisMap<K, V> {
         return this.capacity;
     }
 
+    /*
+     * A toString method, for printing the LuisMap
+     */
     @Override
-    public String toString() {return Arrays.toString(kvPairs);}
+    public String toString() {
+        return this.getLength() + "/" + this.getCapacity() + " " + Arrays.toString(this.kvPairs); 
+    }
 
-    private int mod(int a, int b) {
-        if (a >= 0)
-            return a % b;
-        else
-            return b + (a % b);
+    /**
+     * This method prints the LuisMap to the system out.
+     */
+    public void printSelf() {
+        System.out.println(this.toString());
     }
 }
